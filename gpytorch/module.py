@@ -211,7 +211,7 @@ class Module(nn.Module):
                     "Unknown parameter {name} for {module}".format(
                         name=param_or_closure, module=self.__class__.__name__
                     )
-                    + "Make sure the parameter is registered before registering a prior."
+                    + " Make sure the parameter is registered before registering a prior."
                 )
 
             def closure():
