@@ -45,6 +45,15 @@ class ExactGP(GP):
             self.train_targets = fn(self.train_targets)
         return super(ExactGP, self)._apply(fn)
 
+    def pyro_load_from_samples(self, samples_dict):
+        # Pyro always puts the samples in the first batch dimension
+        num_samples = next(iter(samples_dict.values())).size(0)
+        self.train_inputs = tuple(
+            tri.unsqueeze(0).repeat(num_samples, *([1] * len(tri.shape))) for tri in self.train_inputs
+        )
+        self.train_targets = self.train_targets.unsqueeze(0).repeat(num_samples, *([1] * len(self.train_targets.shape)))
+        super().pyro_load_from_samples(samples_dict)
+
     def set_train_data(self, inputs=None, targets=None, strict=True):
         """
         Set training data (does not re-fit model hyper-parameters).
