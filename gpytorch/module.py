@@ -370,7 +370,6 @@ def _pyro_sample_from_prior(module, memo=None, prefix=""):
 
 
 def _pyro_load_from_samples(module, samples_dict, memo=None, prefix=""):
-    import pyro
     if memo is None:
         memo = set()
     if hasattr(module, "_priors"):
