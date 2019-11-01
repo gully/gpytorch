@@ -27,6 +27,7 @@ class NormalPrior(Prior, Normal):
     def expand(self, batch_shape):
         return Normal.expand(self, batch_shape, _instance=self)
 
+
 class LogNormalPrior(Prior, LogNormal):
     """
     Log Normal prior.
