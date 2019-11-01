@@ -281,6 +281,14 @@ class Module(nn.Module):
     def pyro_sample_from_prior(self):
         return _pyro_sample_from_prior(module=self, memo=None, prefix="")
 
+    def local_load_samples(self, samples_dict, memo, prefix):
+        self._strict(False)
+        for name, (prior, closure, setting_closure) in self._priors.items():
+            if prior is not None and prior not in memo:
+                memo.add(prior)
+                setting_closure(samples_dict[prefix + ("." if prefix else "") + name])
+        self._strict(True)
+
     def pyro_load_from_samples(self, samples_dict):
         return _pyro_load_from_samples(module=self, samples_dict=samples_dict, memo=None, prefix="")
 
@@ -366,12 +374,7 @@ def _pyro_load_from_samples(module, samples_dict, memo=None, prefix=""):
     if memo is None:
         memo = set()
     if hasattr(module, "_priors"):
-        module._strict(False)
-        for name, (prior, closure, setting_closure) in module._priors.items():
-            if prior is not None and prior not in memo:
-                memo.add(prior)
-                setting_closure(samples_dict[prefix + ("." if prefix else "") + name])
-        module._strict(True)
+        module.local_load_samples(samples_dict, memo, prefix)
 
     for mname, module_ in module.named_children():
         submodule_prefix = prefix + ("." if prefix else "") + mname
