@@ -282,10 +282,7 @@ class Module(nn.Module):
         return _pyro_sample_from_prior(module=self, memo=None, prefix="")
 
     def pyro_load_from_samples(self, samples_dict):
-        self._strict(False)
-        for name, prior, closure, setting_closure in self.named_priors():
-            setting_closure(samples_dict[name])
-        self._strict(True)
+        return _pyro_load_from_samples(module=self, samples_dict=samples_dict, memo=None, prefix="")
 
     def update_added_loss_term(self, name, added_loss_term):
         from .mlls import AddedLossTerm
@@ -362,6 +359,23 @@ def _pyro_sample_from_prior(module, memo=None, prefix=""):
     for mname, module_ in module.named_children():
         submodule_prefix = prefix + ("." if prefix else "") + mname
         _pyro_sample_from_prior(module=module_, memo=memo, prefix=submodule_prefix)
+
+
+def _pyro_load_from_samples(module, samples_dict, memo=None, prefix=""):
+    import pyro
+    if memo is None:
+        memo = set()
+    if hasattr(module, "_priors"):
+        module._strict(False)
+        for name, (prior, closure, setting_closure) in module._priors.items():
+            if prior is not None and prior not in memo:
+                memo.add(prior)
+                setting_closure(samples_dict[prefix + ("." if prefix else "") + name])
+        module._strict(True)
+
+    for mname, module_ in module.named_children():
+        submodule_prefix = prefix + ("." if prefix else "") + mname
+        _pyro_load_from_samples(module_, samples_dict, memo=memo, prefix=submodule_prefix)
 
 
 def _extract_named_added_loss_terms(module, memo=None, prefix=""):
