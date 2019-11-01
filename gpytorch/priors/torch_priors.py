@@ -68,6 +68,8 @@ class GammaPrior(Prior, Gamma):
         _bufferize_attributes(self, ("concentration", "rate"))
         self._transform = transform
 
+    def expand(self, batch_shape):
+        return Gamma.expand(self, batch_shape, _instance=self)
 
 class MultivariateNormalPrior(Prior, MultivariateNormal):
     """Multivariate Normal prior
@@ -103,3 +105,6 @@ class MultivariateNormalPrior(Prior, MultivariateNormal):
         module = self._apply(lambda t: t.cpu())
         _del_attributes(module, MVN_LAZY_PROPERTIES)
         return module
+
+    def expand(self, batch_shape):
+        return MultivariateNormal.expand(self, batch_shape, _instance=self)
