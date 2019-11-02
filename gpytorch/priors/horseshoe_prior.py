@@ -5,7 +5,7 @@ from numbers import Number
 
 import torch
 from gpytorch.priors.prior import Prior
-from torch.distributions import constraints
+from torch.distributions import constraints, HalfCauchy, Normal
 from torch.nn import Module as TModule
 
 
@@ -47,3 +47,8 @@ class HorseshoePrior(Prior):
         lb = self.K / 2 * torch.log(1 + 4 * A)
         ub = self.K * torch.log(1 + 2 * A)
         return torch.log((lb + ub) / 2)
+
+    def rsample(self, sample_shape=torch.Size([])):
+        local_shrinkage = HalfCauchy(1).rsample()
+        param_sample = Normal(0, local_shrinkage * self.scale).rsample(sample_shape)
+        return param_sample
